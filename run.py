@@ -1,6 +1,14 @@
 import sys
 from src.io_base import read_input_QE, read_relax_out_QE, print_POSCAR
 
+if sys.argc != 3:
+	print("python -m QE_to_POSCAR.run [option] [filename]")
+	print("This program is used to convert QE input or output into POSCAR")
+	print("QE pw.x input file option is \"in\"")
+	print("QE pw.x output file option is \"out\"")
+	sys.exit()
+
+
 file_format = sys.argv[1]
 filename = sys.argv[2]
 
