@@ -1,5 +1,8 @@
 import re
+import numpy as np
 from .atom import atom, cell, species_tag
+
+bohr_to_angstrom = 0.529177
 
 class read_relax_out_QE:
 	def __init__(self, filename):
@@ -24,6 +27,9 @@ class read_relax_out_QE:
 	def read_cell_parameters(self):
 		with open(self.filename, 'r') as f:	
 			for line in f:
+				if "lattice parameter (alat)  =" in line:
+					lat_par = re.search('[0-9]+\.[0-9]+', line).group()
+					lat_par = float(lat_par)
 				if "crystal axes" in line:
 					lat_vecs = []
 					for _ in range(3):
@@ -31,6 +37,7 @@ class read_relax_out_QE:
 						lat_vec = re.findall('[0-9]+\.[0-9]+', tmp_line)
 						lat_vec = [float(item) for item in lat_vec]
 						lat_vecs.append(lat_vec)
+		lat_vecs = lat_par * np.array(lat_vecs) * bohr_to_angstrom
 		return lat_vecs
 	
 	def read_atomic_positions(self):
@@ -115,11 +122,11 @@ class print_POSCAR:
 	
 	def print_all(self):
 		print("POSCAR")
-		print("1.00000000")
+		print("1.0000000")
 
 		for lat_vec in self.lat_vecs:
 			for coordinate in lat_vec:
-				print("%16.9f"%(coordinate), end = "")
+				print("%14.7f"%(coordinate), end = "")
 			print("")
 
 		for species_tag in self.species_tags:
@@ -132,5 +139,5 @@ class print_POSCAR:
 		print("Direct")
 		for atom in self.atoms:
 			for coordinate in atom.pos:
-				print("%16.9f"%(coordinate), end = "")
+				print("%14.7f"%(coordinate), end = "")
 			print("")

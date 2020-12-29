@@ -22,6 +22,5 @@ elif file_format == 'out' :
 else:
 	print("Invalid format input")
 	exit()
-print("There is no such filename: ", filename, sys.stderr)
 
 print_POSCAR(cell)
