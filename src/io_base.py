@@ -4,6 +4,61 @@ from .atom import atom, cell, species_tag
 
 bohr_to_angstrom = 0.529177
 
+class read_scf_out_QE:
+	def __init__(self, filename):
+		self.filename = filename
+		self.natm = 0
+		self.lat_vecs = []
+		self.atoms = []
+
+		self.natm = self.read_system()
+		self.lat_vecs = self.read_cell_parameters()
+		self.atoms = self.read_atomic_positions()
+		self.cell = cell(self.lat_vecs, self.atoms)
+	
+	def read_system(self):
+		with open(self.filename, 'r') as f:
+			for line in f:
+				if "number of atoms/cell" in line:
+					natm = re.search('[0-9]+', line).group()
+					natm = int(natm)
+		return natm
+	
+	def read_cell_parameters(self):
+		with open(self.filename, 'r') as f:	
+			for line in f:
+				if "lattice parameter (alat)  =" in line:
+					lat_par = re.search('[0-9]+\.[0-9]+', line).group()
+					lat_par = float(lat_par)
+				if "crystal axes" in line:
+					lat_vecs = []
+					for _ in range(3):
+						tmp_line = f.readline()
+						lat_vec = re.findall('[+-]?[0-9]+\.[0-9]+', tmp_line)
+						lat_vec = [float(item) for item in lat_vec]
+						lat_vecs.append(lat_vec)
+		lat_vecs = lat_par * np.array(lat_vecs) * bohr_to_angstrom
+		return lat_vecs
+	
+	def read_atomic_positions(self):
+		with open(self.filename, 'r') as f:	
+			for line in f:
+				if "Crystallographic axes" in line:
+					f.readline()
+					f.readline()
+					atoms = []
+					for _ in range(self.natm):
+						tmp_line = f.readline()
+						tmp_pos = re.findall('[+-]?[0-9]\.[0-9]+', tmp_line)
+						tmp_pos = [float(item) for item in tmp_pos]
+						tmp_spe = re.search('[A-Za-z][A-Za-z]?', tmp_line).group()
+						tmp_atom = atom(tmp_spe, tmp_pos, 0)
+						atoms.append(tmp_atom)
+		return atoms
+	
+	def get_cell(self):
+		return self.cell
+
 class read_relax_out_QE:
 	def __init__(self, filename):
 		self.filename = filename
@@ -34,24 +89,24 @@ class read_relax_out_QE:
 					lat_vecs = []
 					for _ in range(3):
 						tmp_line = f.readline()
-						lat_vec = re.findall('[0-9]+\.[0-9]+', tmp_line)
+						lat_vec = re.findall('[+-]?[0-9]+\.[0-9]+', tmp_line)
 						lat_vec = [float(item) for item in lat_vec]
 						lat_vecs.append(lat_vec)
 		lat_vecs = lat_par * np.array(lat_vecs) * bohr_to_angstrom
 		return lat_vecs
 	
 	def read_atomic_positions(self):
+		atoms = []
 		with open(self.filename, 'r') as f:	
 			for line in f:
 				if "Begin final coordinates" in line:
 					f.readline()
 					f.readline()
-					atoms = []
 					for _ in range(self.natm):
 						tmp_line = f.readline()
-						tmp_pos = re.findall('[0-9+\.[0-9]+', tmp_line)
+						tmp_pos = re.findall('[+-]?[0-9]\.[0-9]+', tmp_line)
 						tmp_pos = [float(item) for item in tmp_pos]
-						tmp_spe = re.match('[a-zA-Z]+', tmp_line).group()
+						tmp_spe = re.match('[A-Za-z][A-Za-z]?', tmp_line).group()
 						tmp_atom = atom(tmp_spe, tmp_pos, 0)
 						atoms.append(tmp_atom)
 		return atoms
@@ -89,7 +144,7 @@ class read_input_QE:
 					for temp_line in f:
 						temp_atm_pos = self.num_format.findall(temp_line)
 						temp_atm_pos = [float(item) for item in temp_atm_pos]
-						temp_spe = re.match('[a-zA-Z]+', temp_line).group()
+						temp_spe = re.match('[A-Za-z][A-Za-z]?', temp_line).group()
 						temp_atom = atom(temp_spe, temp_atm_pos, i)
 						self.atoms.append(temp_atom)
 						i += 1

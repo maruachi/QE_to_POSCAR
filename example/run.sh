@@ -2,5 +2,11 @@
 
 module load anaconda3
 
-python ../run.py in relax.in > POSCAR_from_in
-python ../run.py out relax.out > POSCAR_from_out
+rm -rf POSCAR*
+
+exec="python -m QE_to_POSCAR.run"
+
+$exec 2> Guideline
+$exec in relax.in > POSCAR_from_in
+$exec scf scf.out > POSCAR_from_scf_out
+$exec relax relax.out > POSCAR_from_relax_out

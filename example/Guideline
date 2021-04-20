@@ -1,0 +1,5 @@
+python -m QE_to_POSCAR.run [option] [filename]
+This program is used to convert QE input or output files into POSCAR
+QE pw.x input file option is "in"
+QE pw.x scf output file file option is "scf"
+QE pw.x relax ouput file option is "relax"
